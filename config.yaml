@@ -2,6 +2,11 @@ dt: 0.01
 device: cpu #gpu
 mesh_path: "assets/can/14025_Soda_Can_v3_l3.obj"
 
+#Energy params
+k_stretch: 0.5
+k_area: 0.5
+k_bend: 0.5
+
 #Newmark Time Stepping
 beta: 0 #use 0 (explicit) for debugging and 0.25 (beta > 0; implicit) for production
 gamma: 0.5 #numerical damping
