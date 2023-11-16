@@ -1,3 +1,3 @@
-taichi-lang
+taichi
 pyyaml
 libigl
