@@ -9,6 +9,14 @@ def init_params():
         params = yaml.safe_load(file)
     return params
 
+def init_edges():
+    """Initialize edge indices"""
+    pass
+
+def init_adj_triangles():
+    """use triangle_triangle_adjacency of igl"""
+    pass
+
 def load_mesh(mesh_path):
     """Loads in mesh (obj, off, stl, wrl, ply, mesh) at location mesh_path
         and converts it to triangle mesh if necessary
