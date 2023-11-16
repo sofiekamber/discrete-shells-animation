@@ -1,0 +1,11 @@
+name: pbs2
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - taichi
+    - pyyaml
+    - libigl
