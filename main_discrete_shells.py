@@ -16,7 +16,7 @@ import modules.simulation as sim
 params = init.init_params() #e.g. params["dt"]
 
 #Init mesh
-x, v, vertices, indices = init.load_mesh(params["mesh_path"])
+x, v, vertices, t_indices, e_indices, adj_t_indices = init.load_mesh(params["mesh_path"])
 
 #Access triangle vertices via tri_index indices[tri_id * 3 + v_id]; v_id is index relative to triangle (in [0,1,2])
 
@@ -45,14 +45,14 @@ while window.running:
     sim.update_vertices(vertices,x)
 
 
-    camera.position(0.0, 0.0, 3)
+    camera.position(3.0, 3.0, 4)
     camera.lookat(0.0, 0.0, 0)
     scene.set_camera(camera)
 
-    scene.point_light(pos=(0, 1, 2), color=(1, 1, 1))
+    scene.point_light(pos=(5, 5, 5), color=(1, 1, 1))
     scene.ambient_light((0.5, 0.5, 0.5))
     scene.mesh(vertices,
-               indices=indices,
+               indices=t_indices,
                # per_vertex_color=colors,
                two_sided=True)
 
