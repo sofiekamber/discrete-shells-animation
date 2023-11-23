@@ -1,24 +1,34 @@
-import taichi as ti
-ti.init(arch=ti.cpu)
-
 #Import initialzation module (mesh init)
 import modules.initialization as init
 
+#Load params
+params = init.init_params() #e.g. params["dt"]
+
+import taichi as ti
+device = params["device"]
+if device == 'cpu':
+    ti.init(arch=ti.cpu)
+elif device == 'gpu':
+    ti.init(arch=ti.gpu)
+else:
+    raise ValueError(f"{device} not supported")
 #Import energy functions
 import modules.energies as en
 
 #Import simulation functions (Newmark integration, differentiation)
 import modules.simulation as sim
 
-
 """Initialize"""
-#Load params
-params = init.init_params() #e.g. params["dt"]
+
 
 #Init mesh
-x, v, vertices, t_indices, e_indices, adj_t_indices = init.load_mesh(params["mesh_path"])
+x_init, x, v, gui_indices, t_ids, e_ids, adj_t_ids = init.load_mesh(params["mesh_path"])
 
-#Access triangle vertices via tri_index indices[tri_id * 3 + v_id]; v_id is index relative to triangle (in [0,1,2])
+n_vertices = x.shape[0]
+n_triangles = t_ids.shape[0]
+n_edges = e_ids.shape[0]
+n_adj_triangles = adj_t_ids.shape[0]
+
 
 """Run gui"""
 window = ti.ui.Window("Discrete Shells", (1024, 1024), vsync=True)
@@ -42,7 +52,6 @@ while window.running:
     for i in range(substeps):
         #sim.newmark_integration()
         current_t += dt
-    sim.update_vertices(vertices,x)
 
 
     camera.position(3.0, 3.0, 4)
@@ -51,8 +60,8 @@ while window.running:
 
     scene.point_light(pos=(5, 5, 5), color=(1, 1, 1))
     scene.ambient_light((0.5, 0.5, 0.5))
-    scene.mesh(vertices,
-               indices=t_indices,
+    scene.mesh(x,
+               indices=gui_indices,
                # per_vertex_color=colors,
                two_sided=True)
 

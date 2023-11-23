@@ -9,15 +9,29 @@ def init_params():
         params = yaml.safe_load(file)
     return params
 
+@ti.kernel
+def copy_vector(vertices:ti.template(), x:ti.template()):
+    for i, j in ti.ndrange(*x.shape):
+        vertices[i][j] = x[i, j]
+
+def init_vector(np_v, dim, dtype, shape):
+    field = ti.field(dtype, shape=np_v.shape)
+    field.from_numpy(np_v)
+    vector_field = ti.Vector.field(dim, dtype=dtype, shape=shape)
+    copy_vector(vector_field, field)
+    return vector_field
+
 
 def load_mesh(mesh_path):
     """Loads in mesh (obj, off, stl, wrl, ply, mesh) at location mesh_path
         and converts it to triangle mesh if necessary
        Output:
-        * x: mesh vertices; shape (num_vertices, 3); used in simulation
-        * v: vertex velocities; shape (num_vertices, 3); used in simulation
-        * vertices: mesh vertices; shape (num_vertices,); used in rendering
-        * indices: mesh triangle indices;  shape (num_triangles,); used in rendering"""
+        * vertices_undef: mesh vertices; shape (n_vertices,) - inital vertices
+        * vertices: mesh vertices; shape (n_vertices,)
+        * indices: mesh triangle indices;  shape (n_triangles * 3,); used in rendering
+        * t_indices: mesh triangle indices;  shape (n_triangles,)
+        * e_indices: mesh triangle indices;  shape (n_edges)
+        * adj_t_indices: mesh triangle indices;  shape (n_adj_triangles,)"""
 
     v_np,f = igl.read_triangle_mesh(mesh_path)
     edge_indices, adj_tri_indices = load_indices(f)
@@ -26,26 +40,32 @@ def load_mesh(mesh_path):
 
     # Convert vertices and indices to ti.Vector.field
     n_vertices = len(v_np)
-    n_triangles = int(len(f_np) // 3)
+    n_triangles = len(f)
+    n_edges = len(edge_indices)
+    n_adj_triangles = len(adj_tri_indices)
 
-    x = ti.field(ti.float32, shape=v_np.shape)
-    x.from_numpy(v_np)
+    #Init vertices
+    vertices = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices)
+    vertices_undef = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices)
 
-    v = ti.field(ti.float32, shape=v_np.shape)
-    v.from_numpy(np.zeros(v_np.shape))
+    # Init vel
+    vels_np = np.zeros(v_np.shape)
+    vels = init_vector(vels_np, dim=3, dtype=ti.float32, shape=n_vertices)
 
-    e_indices = ti.field(int, shape=edge_indices.shape)
-    e_indices.from_numpy(edge_indices)
+    #Init edge indices
+    e_indices = init_vector(edge_indices, dim=2, dtype=int, shape=n_edges)
 
-    adj_t_indices = ti.field(int, shape=adj_tri_indices.shape)
-    adj_t_indices.from_numpy(adj_tri_indices)
+    #Init adjacent triangle indices
+    adj_t_indices = init_vector(adj_tri_indices, dim=3, dtype=int, shape=n_adj_triangles)
+
+    #Init triangle indices
+    t_indices = init_vector(f, dim=3, dtype=int, shape=n_triangles)
 
     # For the gui (1D arrays)
-    vertices = ti.Vector.field(3, dtype=ti.float32, shape=n_vertices)
-    t_indices = ti.field(int, shape=n_triangles * 3)
-    t_indices.from_numpy(f_np)
+    gui_indices = ti.field(int, shape=n_triangles * 3)
+    gui_indices.from_numpy(f_np)
 
-    return x, v, vertices, t_indices, e_indices, adj_t_indices
+    return vertices_undef, vertices, vels, gui_indices, t_indices, e_indices, adj_t_indices
 
 def load_indices(tri_indices):
     """Returns edge indices and adjacent triangles to iterate through
