@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\2_fem\src\optLib\GradientDescentMinimizer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\2_fem\src\optLib\GradientDescentMinimizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\2_fem\src\optLib\Minimizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\2_fem\src\optLib\NewtonFunctionMinimizer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\2_fem\src\optLib\ObjectiveFunction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\2_fem\src\optLib\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{EBEFB052-AC9B-3A92-8627-DD9C16D586F5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{646ED480-0DCF-35C2-83A7-A107854750C4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,76 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "glfw::@12507ebf64a5258d241e"
+		},
+		{
+			"id" : "imgui::@45ca6dacf63e9879b888"
+		},
+		{
+			"id" : "1_mass_spring::@10690274576e11ecf611"
+		},
+		{
+			"id" : "glad::@74ca6b3581f0d7366b1f"
+		},
+		{
+			"id" : "femLib::@52b549eb19a42448fd60"
+		},
+		{
+			"id" : "guiLib::@d7d0158371b6d24d309b"
+		},
+		{
+			"id" : "fem-app::@b90831caebae9c9a1c30"
+		},
+		{
+			"id" : "helpersLib::@bed485f2b795c82ed6a8"
+		},
+		{
+			"id" : "nanovg::@3f1d7e54a32cda534cac"
+		},
+		{
+			"id" : "optLib::@96a1f12e01ab82fa0511"
+		},
+		{
+			"id" : "3_fluid::@5111ec996be85e84e06d"
+		},
+		{
+			"id" : "3-1_spinning::@7bc93bb9c5d9471aef18"
+		},
+		{
+			"id" : "3-2_gyro::@229c15c0e529bf161440"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"folder" : 
+	{
+		"name" : "CMakePredefinedTargets"
+	},
+	"id" : "ALL_BUILD::@6890427a1f51a3e7e1df",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"paths" : 
+	{
+		"build" : ".",
+		"source" : "."
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

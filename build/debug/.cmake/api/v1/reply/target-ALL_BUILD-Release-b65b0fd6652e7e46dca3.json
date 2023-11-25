@@ -1,0 +1,55 @@
+{
+	"backtrace" : 0,
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : 
+		[
+			"2_fem/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			}
+		]
+	},
+	"dependencies" : 
+	[
+		{
+			"id" : "femLib::@52b549eb19a42448fd60"
+		},
+		{
+			"id" : "guiLib::@d7d0158371b6d24d309b"
+		},
+		{
+			"id" : "fem-app::@b90831caebae9c9a1c30"
+		},
+		{
+			"id" : "helpersLib::@bed485f2b795c82ed6a8"
+		},
+		{
+			"id" : "nanovg::@3f1d7e54a32cda534cac"
+		},
+		{
+			"id" : "optLib::@96a1f12e01ab82fa0511"
+		},
+		{
+			"id" : "ZERO_CHECK::@6890427a1f51a3e7e1df"
+		}
+	],
+	"folder" : 
+	{
+		"name" : "CMakePredefinedTargets"
+	},
+	"id" : "ALL_BUILD::@01d501c1e4c4ab4bd7e9",
+	"isGeneratorProvided" : true,
+	"name" : "ALL_BUILD",
+	"paths" : 
+	{
+		"build" : "2_fem",
+		"source" : "2_fem"
+	},
+	"sources" : [],
+	"type" : "UTILITY"
+}

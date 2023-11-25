@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/discrete-shells-animation.iml" filepath="$PROJECT_DIR$/.idea/discrete-shells-animation.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/pbs23-solution.iml" filepath="$PROJECT_DIR$/.idea/pbs23-solution.iml" />
     </modules>
   </component>
 </project>

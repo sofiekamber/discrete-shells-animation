@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\libigl\external\glad\src\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\ETH\Master\PhysicallyBasedSimulationInCG\pbs23-solution\libigl\external\glad\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{646ED480-0DCF-35C2-83A7-A107854750C4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
