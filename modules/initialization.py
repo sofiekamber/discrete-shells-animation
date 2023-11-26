@@ -56,7 +56,7 @@ def load_mesh(mesh_path):
     e_indices = init_vector(edge_indices, dim=2, dtype=int, shape=n_edges)
 
     #Init adjacent triangle indices
-    adj_t_indices = init_vector(adj_tri_indices, dim=3, dtype=int, shape=n_adj_triangles)
+    adj_t_indices = init_vector(adj_tri_indices, dim=4, dtype=int, shape=n_adj_triangles)
 
     #Init triangle indices
     t_indices = init_vector(f, dim=3, dtype=int, shape=n_triangles)
@@ -89,17 +89,29 @@ def load_indices(tri_indices):
         face_edge_dict[(tri_idx,2)] = edge_id2
 
 
-    adj_tris, _ = igl.triangle_triangle_adjacency(tri_indices)
+    adj_tris, rel_edge = igl.triangle_triangle_adjacency(tri_indices)
 
     #(tri_id1, tri_id2, edge_id)
     adj_tri_indices = []
     for tri_idx, (tri0, tri1, tri2) in enumerate(adj_tris):
-        if tri0 != -1:
-            adj_tri_indices.append(sorted([tri_idx,tri0]) + [face_edge_dict[(tri_idx,0)]])
-        if tri1 != -1:
-            adj_tri_indices.append(sorted([tri_idx,tri1]) + [face_edge_dict[(tri_idx,1)]])
-        if tri2 != -1:
-            adj_tri_indices.append(sorted([tri_idx,tri2]) + [face_edge_dict[(tri_idx,2)]])
+        if tri0 != -1 and tri0 > tri_idx:
+            adj_tri_indices.append([
+                tri_indices[tri_idx][0],
+                tri_indices[tri_idx][1],
+                tri_indices[tri_idx][2],
+                tri_indices[tri0][(rel_edge[tri_idx][0]+2)%3]])
+        if tri1 != -1 and tri1 > tri_idx:
+            adj_tri_indices.append([
+                tri_indices[tri_idx][1],
+                tri_indices[tri_idx][2],
+                tri_indices[tri_idx][0],
+                tri_indices[tri1][(rel_edge[tri_idx][1]+2)%3]])
+        if tri2 != -1 and tri2 > tri_idx:
+            adj_tri_indices.append([
+                tri_indices[tri_idx][2],
+                tri_indices[tri_idx][0],
+                tri_indices[tri_idx][1],
+                tri_indices[tri2][(rel_edge[tri_idx][2]+2)%3]])
 
     adj_tri_indices = np.unique(adj_tri_indices,axis=0)
     return edge_indices, adj_tri_indices
