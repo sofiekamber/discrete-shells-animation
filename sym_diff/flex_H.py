@@ -1,3 +1,8 @@
+import taichi as ti
+import taichi.math as math
+@ti.func
+def felx_H(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, e_bar, theta_bar, h_bar):
+ print('successfull enter')
  x0 = -y3
  x5 = x0 + y2
  x6 = x1 - x2
@@ -53,6 +58,7 @@
  x56 = x16*x55 - x25*x51
  x57 = x36*x55 - x43*x51
  x58 = x46**2 + x56**2 + x57**2
+ print('hello', x58)
  x59 = math.sqrt(x58)
  x60 = x16*x25
  x61 = x36*x43
@@ -854,3 +860,4 @@
  dz4x4 = -x100*(x268*x300*x63*x65*x91 + 2*x277*x298*x59*x94 + 2*x277*x300*x63*x79*x94 - x700 - x702) - x699
  dz4y4 = x100*(x285*x300*x63*x65*x91 + 2*x294*x298*x59*x94 + 2*x294*x300*x63*x79*x94 - x709 - x710) + x708
  dz4z4 = 2*e_bar*x301**2*x83 - x100*(x300**2*x92 + x308*x712 + x308*x713 - x81*(x299**2 + x607*x715 + x645*x715))
+ return dx1x1, dx1y1, dx1z1, dx1x2, dx1y2, dx1z2, dx1x3, dx1y3, dx1z3, dx1x4, dx1y4, dx1z4, dy1x1, dy1y1, dy1z1, dy1x2, dy1y2, dy1z2, dy1x3, dy1y3, dy1z3, dy1x4, dy1y4, dy1z4, dz1x1, dz1y1, dz1z1, dz1x2, dz1y2, dz1z2, dz1x3, dz1y3, dz1z3, dz1x4, dz1y4, dz1z4, dx2x1, dx2y1, dx2z1, dx2x2, dx2y2, dx2z2, dx2x3, dx2y3, dx2z3, dx2x4, dx2y4, dx2z4, dy2x1, dy2y1, dy2z1, dy2x2, dy2y2, dy2z2, dy2x3, dy2y3, dy2z3, dy2x4, dy2y4, dy2z4, dz2x1, dz2y1, dz2z1, dz2x2, dz2y2, dz2z2, dz2x3, dz2y3, dz2z3, dz2x4, dz2y4, dz2z4, dx3x1, dx3y1, dx3z1, dx3x2, dx3y2, dx3z2, dx3x3, dx3y3, dx3z3, dx3x4, dx3y4, dx3z4, dy3x1, dy3y1, dy3z1, dy3x2, dy3y2, dy3z2, dy3x3, dy3y3, dy3z3, dy3x4, dy3y4, dy3z4, dz3x1, dz3y1, dz3z1, dz3x2, dz3y2, dz3z2, dz3x3, dz3y3, dz3z3, dz3x4, dz3y4, dz3z4, dx4x1, dx4y1, dx4z1, dx4x2, dx4y2, dx4z2, dx4x3, dx4y3, dx4z3, dx4x4, dx4y4, dx4z4, dy4x1, dy4y1, dy4z1, dy4x2, dy4y2, dy4z2, dy4x3, dy4y3, dy4z3, dy4x4, dy4y4, dy4z4, dz4x1, dz4y1, dz4z1, dz4x2, dz4y2, dz4z2, dz4x3, dz4y3, dz4z3, dz4x4, dz4y4, dz4z4, 
