@@ -7,7 +7,7 @@ params = init.init_params() #e.g. params["dt"]
 import taichi as ti
 device = params["device"]
 if device == 'cpu':
-    ti.init(arch=ti.cpu)
+    ti.init(arch=ti.cpu,debug=True)
 elif device == 'gpu':
     ti.init(arch=ti.gpu)
 else:
@@ -22,7 +22,7 @@ import modules.simulation as sim
 
 
 #Init mesh
-x_init, x, v, gui_indices, t_ids, e_ids, adj_t_ids = init.load_mesh(params["mesh_path"])
+x_init, x, v, vertices_gui, gui_indices, t_ids, e_ids, adj_t_ids = init.load_mesh(params["mesh_path"])
 
 n_vertices = x.shape[0]
 n_triangles = t_ids.shape[0]
@@ -43,7 +43,6 @@ dt = params["dt"]
 substeps = int(1 / 60 // dt)
 
 
-
 while window.running:
     if current_t > 1.5:
         # Reset
@@ -51,6 +50,7 @@ while window.running:
 
     for i in range(substeps):
         #sim.newmark_integration()
+        sim.update_vertices(x,vertices_gui)
         current_t += dt
 
 
@@ -60,7 +60,7 @@ while window.running:
 
     scene.point_light(pos=(5, 5, 5), color=(1, 1, 1))
     scene.ambient_light((0.5, 0.5, 0.5))
-    scene.mesh(x,
+    scene.mesh(vertices_gui,
                indices=gui_indices,
                # per_vertex_color=colors,
                two_sided=True)

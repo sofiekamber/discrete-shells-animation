@@ -44,9 +44,14 @@ def load_mesh(mesh_path):
     n_edges = len(edge_indices)
     n_adj_triangles = len(adj_tri_indices)
 
-    #Init vertices
-    vertices = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices)
-    vertices_undef = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices)
+    #Init vertices, have to be ndarray for solver
+    vertices_gui = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices) #needed for gui
+    # vertices_undef = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices)
+    vertices = ti.ndarray(dtype=ti.math.vec3, shape=n_vertices)
+    vertices.from_numpy(v_np)
+    vertices_undef = ti.ndarray(dtype=ti.math.vec3, shape=n_vertices)
+    vertices_undef.from_numpy(v_np)
+
 
     # Init vel
     vels_np = np.zeros(v_np.shape)
@@ -65,7 +70,7 @@ def load_mesh(mesh_path):
     gui_indices = ti.field(int, shape=n_triangles * 3)
     gui_indices.from_numpy(f_np)
 
-    return vertices_undef, vertices, vels, gui_indices, t_indices, e_indices, adj_t_indices
+    return vertices_undef, vertices, vels, vertices_gui, gui_indices, t_indices, e_indices, adj_t_indices
 
 def load_indices(tri_indices):
     """Returns edge indices and adjacent triangles to iterate through
@@ -115,3 +120,35 @@ def load_indices(tri_indices):
 
     adj_tri_indices = np.unique(adj_tri_indices,axis=0)
     return edge_indices, adj_tri_indices
+
+def init_rest_edge_lengths():
+    """
+    Returns list of edge lengths of the undeformed edges
+    with rest_edge_lengths[i] = rest edge length of edge i
+    """
+    #TODO
+    pass
+
+def init_rest_triangle_areas():
+    """
+    Returns list of triangle areas of the undeformed triangles
+    with rest_triangle_areas[i] = rest triangle area of triangle i
+    """
+    #TODO
+    pass
+
+def init_rest_dihedral_angles():
+    """
+    Returns list of dihedral angles of the undeformed adjacent triangles
+    with rest_dihedral_angles[i] = rest dihedral angle of adjacent triangles i
+    """
+    #TODO
+    pass
+
+def init_rest_heights():
+    """
+    Returns list of heights of the undeformed adjacent triangles
+    with rest_heights[i] = rest height of adjacent triangles i
+    """
+    #TODO
+    pass
