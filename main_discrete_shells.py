@@ -29,6 +29,20 @@ n_triangles = t_ids.shape[0]
 n_edges = e_ids.shape[0]
 n_adj_triangles = adj_t_ids.shape[0]
 
+#Initialize rest
+rest_edge_lengths = ti.Vector.field(1, dtype=ti.float32, shape=n_edges)
+init.init_rest_edge_lengths(e_ids, x, rest_edge_lengths)
+
+rest_triangle_areas = ti.Vector.field(1, dtype=ti.float32, shape=n_triangles)
+init.init_rest_triangle_areas(t_ids, x, rest_triangle_areas)
+
+rest_dihedral_angles= ti.Vector.field(1, dtype=ti.float32, shape=n_adj_triangles)
+init.init_rest_dihedral_angles(adj_t_ids, x, rest_dihedral_angles)
+
+rest_heights = ti.Vector.field(1, dtype=ti.float32, shape=n_adj_triangles)
+init.init_rest_heights(adj_t_ids, x, rest_heights)
+
+
 
 """Run gui"""
 window = ti.ui.Window("Discrete Shells", (1024, 1024), vsync=True)

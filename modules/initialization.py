@@ -2,6 +2,7 @@ import taichi as ti
 import yaml
 import igl
 import numpy as np
+import modules.energy_helper_funcs as ef
 
 def init_params():
     """Load in parameters specified in config.yaml"""
@@ -46,7 +47,6 @@ def load_mesh(mesh_path):
 
     #Init vertices, have to be ndarray for solver
     vertices_gui = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices) #needed for gui
-    # vertices_undef = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices)
     vertices = ti.ndarray(dtype=ti.math.vec3, shape=n_vertices)
     vertices.from_numpy(v_np)
     vertices_undef = ti.ndarray(dtype=ti.math.vec3, shape=n_vertices)
@@ -121,34 +121,65 @@ def load_indices(tri_indices):
     adj_tri_indices = np.unique(adj_tri_indices,axis=0)
     return edge_indices, adj_tri_indices
 
-def init_rest_edge_lengths():
+@ti.kernel
+def init_rest_edge_lengths(edges: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+                             rest_edge_lengths:ti.template()):
     """
     Returns list of edge lengths of the undeformed edges
     with rest_edge_lengths[i] = rest edge length of edge i
     """
-    #TODO
-    pass
+    for i in range(edges.shape[0]):
+        v0_idx, v1_idx = edges[i]
+        v0 = vertices[v0_idx]
+        v1 = vertices[v1_idx]
+        rest_edge_lengths[i] = ef.edge_length(v0, v1)
 
-def init_rest_triangle_areas():
+@ti.kernel
+def init_rest_triangle_areas(triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+                             rest_triangle_areas:ti.template()):
     """
     Returns list of triangle areas of the undeformed triangles
     with rest_triangle_areas[i] = rest triangle area of triangle i
     """
-    #TODO
-    pass
+    for i in range(triangles.shape[0]):
+        v0_idx, v1_idx, v2_idx = triangles[i]
+        v0 = vertices[v0_idx]
+        v1 = vertices[v1_idx]
+        v2 = vertices[v2_idx]
+        rest_triangle_areas[i] = ef.triangle_area(v0, v1, v2)
 
-def init_rest_dihedral_angles():
+
+@ti.kernel
+def init_rest_dihedral_angles(adj_triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+                              rest_dihedral_angles:ti.template()):
     """
     Returns list of dihedral angles of the undeformed adjacent triangles
     with rest_dihedral_angles[i] = rest dihedral angle of adjacent triangles i
     """
-    #TODO
-    pass
+    for i in range(adj_triangles.shape[0]):
+        v0_idx, v1_idx, v2_idx, v3_idx = adj_triangles[i]
+        v0 = vertices[v0_idx]
+        v1 = vertices[v1_idx]
+        v2 = vertices[v2_idx]
+        v3 = vertices[v3_idx]
+        normal0 = ef.triangle_normal(v0, v1, v2)
+        normal1 = ef.triangle_normal(v0, v3, v1)
+        rest_dihedral_angles[i] = ef.dihedral_angle(normal0,normal1)
 
-def init_rest_heights():
+@ti.kernel
+def init_rest_heights(adj_triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+                      rest_heights:ti.template()):
     """
     Returns list of heights of the undeformed adjacent triangles
     with rest_heights[i] = rest height of adjacent triangles i
     """
-    #TODO
-    pass
+    for i in range(adj_triangles.shape[0]):
+        v0_idx, v1_idx, v2_idx, v3_idx = adj_triangles[i]
+        v0 = vertices[v0_idx]
+        v1 = vertices[v1_idx]
+        v2 = vertices[v2_idx]
+        v3 = vertices[v3_idx]
+        t0_area = ef.triangle_area(v0, v1, v2)
+        t1_area = ef.triangle_area(v0, v3, v1)
+        e_length = ef.edge_length(v0, v1)
+        rest_heights[i] = ef.height(t0_area, t1_area, e_length)
