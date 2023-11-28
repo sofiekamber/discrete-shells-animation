@@ -1,0 +1,67 @@
+import taichi as ti
+import taichi.math as math
+@ti.func
+def edge_H(x1, y1, z1, x2, y2, z2, e_bar):
+ x0 = x1 - x2
+ x3 = x0**2
+ x4 = 1/e_bar
+ x5 = y1 - y2
+ x6 = x5**2
+ x7 = z1 - z2
+ x8 = x7**2
+ x9 = x3 + x6 + x8
+ x10 = 1/x9
+ x11 = 2*x10*x4
+ x12 = math.sqrt(x9)
+ x13 = 2*x12*x4 - 2
+ x14 = x13/x12
+ x15 = x13/x9**(3/2)
+ x16 = x11*x3 + x14 - x15*x3
+ x17 = -2*x0*x10*x4*x5 + x0*x15*x5
+ x18 = -x17
+ x19 = -2*x0*x10*x4*x7 + x0*x15*x7
+ x20 = -x19
+ x21 = -x16
+ x22 = x11*x6 + x14 - x15*x6
+ x23 = -2*x10*x4*x5*x7 + x15*x5*x7
+ x24 = -x23
+ x25 = -x22
+ x26 = x11*x8 + x14 - x15*x8
+ x27 = -x26
+ dx1x1 = x16
+ dx1y1 = x18
+ dx1z1 = x20
+ dx1x2 = x21
+ dx1y2 = x17
+ dx1z2 = x19
+ dy1x1 = x18
+ dy1y1 = x22
+ dy1z1 = x24
+ dy1x2 = x17
+ dy1y2 = x25
+ dy1z2 = x23
+ dz1x1 = x20
+ dz1y1 = x24
+ dz1z1 = x26
+ dz1x2 = x19
+ dz1y2 = x23
+ dz1z2 = x27
+ dx2x1 = x21
+ dx2y1 = x17
+ dx2z1 = x19
+ dx2x2 = x16
+ dx2y2 = x18
+ dx2z2 = x20
+ dy2x1 = x17
+ dy2y1 = x25
+ dy2z1 = x23
+ dy2x2 = x18
+ dy2y2 = x22
+ dy2z2 = x24
+ dz2x1 = x19
+ dz2y1 = x23
+ dz2z1 = x27
+ dz2x2 = x20
+ dz2y2 = x24
+ dz2z2 = x26
+ return dx1x1, dx1y1, dx1z1, dx1x2, dx1y2, dx1z2, dy1x1, dy1y1, dy1z1, dy1x2, dy1y2, dy1z2, dz1x1, dz1y1, dz1z1, dz1x2, dz1y2, dz1z2, dx2x1, dx2y1, dx2z1, dx2x2, dx2y2, dx2z2, dy2x1, dy2y1, dy2z1, dy2x2, dy2y2, dy2z2, dz2x1, dz2y1, dz2z1, dz2x2, dz2y2, dz2z2, 

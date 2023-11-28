@@ -1,3 +1,7 @@
+import taichi as ti
+import taichi.math as math
+@ti.func
+def felx_J(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, e_bar, theta_bar, h_bar):
  x0 = -y3
  x5 = x0 + y2
  x6 = x1 - x2
@@ -100,3 +104,4 @@
  dx4 = -x51*(x38*x39*x49*(x31*(x89 - x90) + x34*x87 + x35*x88) - x40*(x85 + x86))
  dy4 = x51*(x38*x39*x49*(x31*x92 + x34*(x90 + x93) + x35*x86) - x40*(-x88 + x91))
  dz4 = -x51*(x40*(x87 + x92) + x50*(x31*x91 + x34*x85 - x35*(-x89 + x93)))
+ return dx1, dy1, dz1, dx2, dy2, dz2, dx3, dy3, dz3, dx4, dy4, dz4, 

@@ -2,7 +2,6 @@ import taichi as ti
 import taichi.math as math
 @ti.func
 def felx_H(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, e_bar, theta_bar, h_bar):
- print('successfull enter')
  x0 = -y3
  x5 = x0 + y2
  x6 = x1 - x2
@@ -58,7 +57,6 @@ def felx_H(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, e_bar, theta_bar, h_b
  x56 = x16*x55 - x25*x51
  x57 = x36*x55 - x43*x51
  x58 = x46**2 + x56**2 + x57**2
- print('hello', x58)
  x59 = math.sqrt(x58)
  x60 = x16*x25
  x61 = x36*x43
