@@ -1,7 +1,7 @@
 import taichi as ti
 import taichi.math as math
 @ti.func
-def edge_J(x1, y1, z1, x2, y2, z2, e_bar):
+def edge_J(x1, y1, z1, x2, y2, z2, e_bar) -> ti.types.vector(6, float):
  x0 = x1 - x2
  x3 = y1 - y2
  x4 = z1 - z2

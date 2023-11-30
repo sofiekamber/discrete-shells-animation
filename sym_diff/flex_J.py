@@ -1,7 +1,7 @@
 import taichi as ti
 import taichi.math as math
 @ti.func
-def felx_J(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, e_bar, theta_bar, h_bar):
+def flex_J(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, e_bar, theta_bar, h_bar):
  x0 = -y3
  x5 = x0 + y2
  x6 = x1 - x2
