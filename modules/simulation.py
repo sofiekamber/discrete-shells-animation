@@ -1,9 +1,10 @@
 import taichi as ti
 
 @ti.kernel
-def update_vertices(vertices: ti.types.ndarray(dtype=ti.math.vec3, ndim=1), vertices_gui: ti.template()):
+def update_vertices(vertices:ti.types.ndarray(dtype=ti.float32, ndim=1), vertices_gui: ti.template()):
     for i in range(vertices_gui.shape[0]):
-        vertices_gui[i] = vertices[i]
+        index = i * 3
+        vertices_gui[i] = ti.Vector([vertices[index], vertices[index + 1], vertices[index + 2]])
 
 @ti.kernel
 def fillIdentity(A: ti.types.sparse_matrix_builder(), n: ti.i32):
