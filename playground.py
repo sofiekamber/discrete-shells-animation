@@ -46,7 +46,7 @@ init.init_rest_heights(adj_t_ids, x, rest_heights)
 from modules.helpers import *
 @ti.kernel 
 def proj_test():
-    test = global_idx_2(0,1)
+    test = global_idx(0) + global_idx(1) + global_idx(3)
     print(test)
 
 proj_test()
@@ -57,15 +57,17 @@ print(t_ids.to_numpy())
 x[0][0] = 1
 print(x.to_numpy())
 
+vertices = x.to_numpy().flatten()
 
-from modules.energy_iterators import populate_edge_jacobian
+from modules.energy_iterators import populate_area_jacobian
 
 J = ti.ndarray(float, 3*n_vertices)
-populate_edge_jacobian(J, e_ids, x, rest_edge_lengths, n_edges)
+populate_area_jacobian(J, t_ids, vertices, rest_triangle_areas, n_triangles)
 print(J.to_numpy())
 
-from modules.energy_iterators import populate_edge_hessian
+from modules.energy_iterators import populate_area_hessian
 
 H = ti.linalg.SparseMatrixBuilder(3*n_vertices, 3*n_vertices)
-populate_edge_hessian(H, e_ids, x, rest_edge_lengths, n_edges)
+populate_area_hessian(H, t_ids, vertices, rest_triangle_areas, n_triangles)
 print(H.build())
+

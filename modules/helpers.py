@@ -20,3 +20,7 @@ def global_idx(i:int) -> ti.types.vector(3, int):
 def global_idx_2(i0:int, i1:int) -> ti.types.vector(6,int):
     return id_x(i0), id_y(i0), id_z(i0), id_x(i1), id_y(i1), id_z(i1)
 
+@ti.func
+def get_vertex_coords(i: int, V: ti.template()) -> ti.types.vector(3, float):
+    i_x, i_y, i_z = global_idx(i)
+    return V[i_x], V[i_y], V[i_z]
