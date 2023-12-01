@@ -59,15 +59,16 @@ print(x.to_numpy())
 
 vertices = x.to_numpy().flatten()
 
-from modules.energy_iterators import populate_area_jacobian
+rest_adj_tri_metadata = ti.Vector.field(n=3, dtype=ti.float32, shape=n_adj_triangles)
+init.init_rest_adj_tri_metadata(adj_t_ids, vertices, rest_adj_tri_metadata)
+
+from modules.energy_iterators import populate_flex_jacobian
+from modules.energy_iterators import populate_flex_hessian
 
 J = ti.ndarray(float, 3*n_vertices)
-populate_area_jacobian(J, t_ids, vertices, rest_triangle_areas, n_triangles)
+populate_flex_jacobian(J, adj_t_ids, vertices, rest_adj_tri_metadata, n_adj_triangles)
 print(J.to_numpy())
 
-from modules.energy_iterators import populate_area_hessian
-
-H = ti.linalg.SparseMatrixBuilder(3*n_vertices, 3*n_vertices)
-populate_area_hessian(H, t_ids, vertices, rest_triangle_areas, n_triangles)
+H = ti.linalg.SparseMatrixBuilder(3*n_vertices, 3*n_vertices, dtype = ti.f32)
+populate_flex_hessian(H, adj_t_ids, vertices, rest_adj_tri_metadata, n_adj_triangles)
 print(H.build())
-

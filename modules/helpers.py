@@ -23,4 +23,4 @@ def global_idx_2(i0:int, i1:int) -> ti.types.vector(6,int):
 @ti.func
 def get_vertex_coords(i: int, V: ti.template()) -> ti.types.vector(3, float):
     i_x, i_y, i_z = global_idx(i)
-    return V[i_x], V[i_y], V[i_z]
+    return ti.Vector([ V[i_x], V[i_y], V[i_z]])

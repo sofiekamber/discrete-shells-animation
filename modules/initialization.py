@@ -3,6 +3,7 @@ import yaml
 import igl
 import numpy as np
 import modules.energy_helper_funcs as ef
+from modules.helpers import get_vertex_coords
 
 def init_params():
     """Load in parameters specified in config.yaml"""
@@ -197,3 +198,29 @@ def init_rest_heights(adj_triangles: ti.template(), vertices:ti.types.ndarray(dt
         t1_area = ef.triangle_area(v0, v3, v1)
         e_length = ef.edge_length(v0, v1)
         rest_heights[i] = ef.height(t0_area, t1_area, e_length)
+
+@ti.kernel
+def init_rest_adj_tri_metadata(
+        adj_triangles: ti.template(),
+        vertices: ti.types.ndarray(dtype=float),
+        meta_data: ti.template()):
+    """
+    Populates meta_data with the hinge edge length, the dihedral angle and the 1/3 of the average height.
+    """
+    for i in range(adj_triangles.shape[0]):
+        v0_idx, v1_idx, v2_idx, v3_idx = adj_triangles[i]
+        v0 = get_vertex_coords(v0_idx, vertices)
+        v1 = get_vertex_coords(v1_idx, vertices)
+        v2 = get_vertex_coords(v2_idx, vertices)
+        v3 = get_vertex_coords(v3_idx, vertices)
+
+        normal0 = ef.triangle_normal(v0, v1, v2)
+        normal1 = ef.triangle_normal(v0, v3, v1)
+        t0_area = ef.triangle_area(v0, v1, v2)
+        t1_area = ef.triangle_area(v0, v3, v1)
+        e_length = ef.edge_length(v0, v1)
+
+        meta_data[i][0] = e_length
+        meta_data[i][1] = ef.dihedral_angle(normal0, normal1)
+        meta_data[i][2] = ef.height(t0_area, t1_area, e_length)
+
