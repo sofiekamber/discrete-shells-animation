@@ -56,6 +56,7 @@ current_t = 0.0
 dt = params["dt"]
 substeps = int(1 / 60 // dt)
 
+M_inverse = ti.linalg.SparseMatrixBuilder(num_rows=n_vertices, num_cols=n_vertices, max_num_triplets=100)
 
 while window.running:
     if current_t > 1.5:
@@ -63,7 +64,7 @@ while window.running:
         current_t = 0
 
     for i in range(substeps):
-        #sim.newmark_integration()
+        sim.newmark_integration(x=x, delta_t=dt, beta=params["beta"], e_ids=e_ids, rest_edge_lengths=rest_edge_lengths, n_edges=n_edges)
         sim.update_vertices(x,vertices_gui)
         current_t += dt
 
