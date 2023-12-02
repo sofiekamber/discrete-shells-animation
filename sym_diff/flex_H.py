@@ -92,7 +92,7 @@ def flex_H(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4, e_bar, theta_bar, h_b
  x91 = x58**(-3/2)
  x92 = x80*x91
  x93 = x45*x63 - x78
- x94 = x64**(-2)
+ x94 = 1/x64**(2)
  x95 = 2*x94
  x96 = x59*x95
  x97 = x45*x96

@@ -202,7 +202,7 @@ def init_rest_heights(adj_triangles: ti.template(), vertices:ti.types.ndarray(dt
 @ti.kernel
 def init_rest_adj_tri_metadata(
         adj_triangles: ti.template(),
-        vertices: ti.types.ndarray(dtype=float),
+        vertices: ti.types.ndarray(dtype=ti.f32),
         meta_data: ti.template()):
     """
     Populates meta_data with the hinge edge length, the dihedral angle and the 1/3 of the average height.

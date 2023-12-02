@@ -54,10 +54,10 @@ proj_test()
 #iterator tests
 print(x.to_numpy())
 print(t_ids.to_numpy())
-x[0][0] = 1
-print(x.to_numpy())
+vertices = x
+vertices[0] = 2
+print(vertices.to_numpy())
 
-vertices = x.to_numpy().flatten()
 
 rest_adj_tri_metadata = ti.Vector.field(n=3, dtype=ti.float32, shape=n_adj_triangles)
 init.init_rest_adj_tri_metadata(adj_t_ids, vertices, rest_adj_tri_metadata)
@@ -65,10 +65,10 @@ init.init_rest_adj_tri_metadata(adj_t_ids, vertices, rest_adj_tri_metadata)
 from modules.energy_iterators import populate_flex_jacobian
 from modules.energy_iterators import populate_flex_hessian
 
-J = ti.ndarray(float, 3*n_vertices)
+J = ti.ndarray(float, n_vertices)
 populate_flex_jacobian(J, adj_t_ids, vertices, rest_adj_tri_metadata, n_adj_triangles)
 print(J.to_numpy())
 
-H = ti.linalg.SparseMatrixBuilder(3*n_vertices, 3*n_vertices, dtype = ti.f32)
+H = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices, dtype = ti.f32)
 populate_flex_hessian(H, adj_t_ids, vertices, rest_adj_tri_metadata, n_adj_triangles)
 print(H.build())
