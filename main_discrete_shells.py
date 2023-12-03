@@ -64,7 +64,7 @@ while window.running:
         current_t = 0
 
     for i in range(substeps):
-        sim.newmark_integration(x=x, delta_t=dt, beta=params["beta"], e_ids=e_ids, rest_edge_lengths=rest_edge_lengths, n_edges=n_edges, t_ids=t_ids, A_bars=rest_triangle_areas, n_tris=n_triangles)
+        sim.newmark_integration(x_i=x, delta_t=dt, beta=params["beta"], e_ids=e_ids, rest_edge_lengths=rest_edge_lengths, n_edges=n_edges, t_ids=t_ids, A_bars=rest_triangle_areas, n_tris=n_triangles)
         sim.update_vertices(x,vertices_gui)
         current_t += dt
 
