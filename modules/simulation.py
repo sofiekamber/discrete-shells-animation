@@ -81,10 +81,10 @@ def get_euclidian_distance(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(),
     return math.sqrt(distance)
 
 
-def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), delta_t: ti.f64, beta: ti.f64,
+def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.types.ndarray(), delta_t: ti.f64, beta: ti.f64,
                 e_ids: ti.template(), rest_edge_lengths: ti.template(), n_edges: ti.i32, t_ids: ti.template(),
                 A_bars: ti.template(), n_tris: ti.i32, n_vertices: ti.i32, M_inverse: ti.template(),
-                Identity: ti.template()):
+                Identity: ti.template(), acc_i: ti.template()):
     H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices)
     # populate_edge_hessian(H_builder, e_ids, x, rest_edge_lengths, n_edges)
     populate_area_hessian(H_builder, t_ids, x_old, A_bars, n_tris)
@@ -92,17 +92,11 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), delta_t: t
 
     A = delta_t * delta_t * beta * M_inverse * H - Identity
 
-    t1 = x_old
+    t1 = x_i
     add_scalar_to_ndarray(t1, delta_t + delta_t * delta_t * (beta - 0.5))
     t1_vec_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     fill_col_vector(t1_vec_builder, t1, n_vertices)
     t1_vec = t1_vec_builder.build()
-
-    # create Jacobian
-    J = ti.ndarray(float, n_vertices)
-    # populate_edge_jacobian(J, e_ids, x_rolled, rest_edge_lengths, n_edges)
-    populate_area_jacobian(J, t_ids, x_old, A_bars, n_tris)
-    acc_i = M_inverse @ J
 
     acc_i_vec_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     fill_col_vector(acc_i_vec_builder, acc_i, n_vertices)
@@ -127,7 +121,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), delta_t: t
     return x_old, x_new
 
 
-def newmark_integration(x: ti.types.ndarray(),
+def newmark_integration(x_i: ti.types.ndarray(),
                         delta_t: ti.f64,
                         beta: ti.f64,
                         e_ids: ti.template(),
@@ -140,7 +134,7 @@ def newmark_integration(x: ti.types.ndarray(),
         x_(i+1) = x_i + dt_i + dt_i^2 * ((0.5 - beta) x''_i + beta * x_''(i+1),
         x'_(i+1) = x'_i + dt_i * ((1-gamma) x''_i + gamma * x''_(i+1))"""
 
-    n_vertices = x.shape[0]
+    n_vertices = x_i.shape[0]
 
     # create inverse mass matrix M^-1
     # M is diagonal, and the mass assigned to a vertex is a third of the total area of the incident triangles, scaled by the area mass density.
@@ -148,6 +142,13 @@ def newmark_integration(x: ti.types.ndarray(),
     M_inverse_builder = ti.linalg.SparseMatrixBuilder(num_rows=n_vertices, num_cols=n_vertices, max_num_triplets=100)
     fillInveredMass(M_inverse_builder, n_vertices)
     M_inverse = M_inverse_builder.build()
+
+    # create Jacobian
+    J = ti.ndarray(float, n_vertices)
+    # populate_edge_jacobian(J, e_ids, x_rolled, rest_edge_lengths, n_edges)
+    populate_area_jacobian(J, t_ids, x_i, A_bars, n_tris)
+
+    acc_i = M_inverse @ J
 
     Identity_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices)
 
@@ -157,13 +158,15 @@ def newmark_integration(x: ti.types.ndarray(),
     epsilon = 1e-6
 
     # first step
-    x_old = x
-    x_new = x
-    x_old, x_new = newton_step(x_old, x_new, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
-                               n_vertices, M_inverse, Identity)
+    # x_old = ti.ndarray(float, n_vertices)  # initial guess
+    # add_scalar_to_ndarray(x_old, 1.0)
+    x_old = x_i
+    x_new = x_i
+    x_old, x_new = newton_step(x_old, x_new, x_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
+                               n_vertices, M_inverse, Identity, acc_i)
 
     while get_euclidian_distance(x_old, x_new, n_vertices) > epsilon:
-        x_old, x_new = newton_step(x_old, x_new, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars,
-                                   n_tris, n_vertices, M_inverse, Identity)
+        x_old, x_new = newton_step(x_old, x_new, x_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars,
+                                   n_tris, n_vertices, M_inverse, Identity, acc_i)
 
     return x_new
