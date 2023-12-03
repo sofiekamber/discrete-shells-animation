@@ -46,7 +46,7 @@ init.init_rest_heights(adj_t_ids, x, rest_heights)
 from modules.helpers import *
 @ti.kernel 
 def proj_test():
-    test = global_idx_2(0,1)
+    test = global_idx(0) + global_idx(1) + global_idx(3)
     print(test)
 
 proj_test()
@@ -54,18 +54,21 @@ proj_test()
 #iterator tests
 print(x.to_numpy())
 print(t_ids.to_numpy())
-x[0][0] = 1
-print(x.to_numpy())
+vertices = x
+vertices[0] = 2
+print(vertices.to_numpy())
 
 
-from modules.energy_iterators import populate_edge_jacobian
+rest_adj_tri_metadata = ti.Vector.field(n=3, dtype=ti.float32, shape=n_adj_triangles)
+init.init_rest_adj_tri_metadata(adj_t_ids, vertices, rest_adj_tri_metadata)
 
-J = ti.ndarray(float, 3*n_vertices)
-populate_edge_jacobian(J, e_ids, x, rest_edge_lengths, n_edges)
+from modules.energy_iterators import populate_flex_jacobian
+from modules.energy_iterators import populate_flex_hessian
+
+J = ti.ndarray(float, n_vertices)
+populate_flex_jacobian(J, adj_t_ids, vertices, rest_adj_tri_metadata, n_adj_triangles)
 print(J.to_numpy())
 
-from modules.energy_iterators import populate_edge_hessian
-
-H = ti.linalg.SparseMatrixBuilder(3*n_vertices, 3*n_vertices)
-populate_edge_hessian(H, e_ids, x, rest_edge_lengths, n_edges)
+H = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices, dtype = ti.f32)
+populate_flex_hessian(H, adj_t_ids, vertices, rest_adj_tri_metadata, n_adj_triangles)
 print(H.build())

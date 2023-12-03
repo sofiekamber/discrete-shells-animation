@@ -3,6 +3,7 @@ import yaml
 import igl
 import numpy as np
 import modules.energy_helper_funcs as ef
+from modules.helpers import get_vertex_coords
 
 def init_params():
     """Load in parameters specified in config.yaml"""
@@ -47,15 +48,16 @@ def load_mesh(mesh_path):
 
     #Init vertices, have to be ndarray for solver
     vertices_gui = init_vector(v_np, dim=3, dtype=ti.float32, shape=n_vertices) #needed for gui
-    vertices = ti.ndarray(dtype=ti.math.vec3, shape=n_vertices)
-    vertices.from_numpy(v_np)
-    vertices_undef = ti.ndarray(dtype=ti.math.vec3, shape=n_vertices)
-    vertices_undef.from_numpy(v_np)
+    vertices = ti.ndarray(dtype=ti.float32, shape=3 * n_vertices)
+    vertices.from_numpy(v_np.flatten())
+    vertices_undef = ti.ndarray(dtype=ti.float32, shape=3 * n_vertices)
+    vertices_undef.from_numpy(v_np.flatten())
 
 
     # Init vel
-    vels_np = np.zeros(v_np.shape)
-    vels = init_vector(vels_np, dim=3, dtype=ti.float32, shape=n_vertices)
+    vels_np = np.zeros(3 * n_vertices)
+    vels = ti.ndarray(dtype=ti.float32, shape=3 * n_vertices)
+    vels.from_numpy(vels_np)
 
     #Init edge indices
     e_indices = init_vector(edge_indices, dim=2, dtype=int, shape=n_edges)
@@ -122,7 +124,7 @@ def load_indices(tri_indices):
     return edge_indices, adj_tri_indices
 
 @ti.kernel
-def init_rest_edge_lengths(edges: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+def init_rest_edge_lengths(edges: ti.template(), vertices:ti.types.ndarray(dtype=ti.float32, ndim=1),
                              rest_edge_lengths:ti.template()):
     """
     Returns list of edge lengths of the undeformed edges
@@ -130,12 +132,14 @@ def init_rest_edge_lengths(edges: ti.template(), vertices:ti.types.ndarray(dtype
     """
     for i in range(edges.shape[0]):
         v0_idx, v1_idx = edges[i]
-        v0 = vertices[v0_idx]
-        v1 = vertices[v1_idx]
+        v0_idx *= 3
+        v1_idx *= 3
+        v0 = ti.math.vec3(vertices[v0_idx],vertices[v0_idx + 1],vertices[v0_idx + 2])
+        v1 = ti.math.vec3(vertices[v1_idx],vertices[v1_idx + 1],vertices[v1_idx + 2])
         rest_edge_lengths[i] = ef.edge_length(v0, v1)
 
 @ti.kernel
-def init_rest_triangle_areas(triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+def init_rest_triangle_areas(triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.float32, ndim=1),
                              rest_triangle_areas:ti.template()):
     """
     Returns list of triangle areas of the undeformed triangles
@@ -143,14 +147,17 @@ def init_rest_triangle_areas(triangles: ti.template(), vertices:ti.types.ndarray
     """
     for i in range(triangles.shape[0]):
         v0_idx, v1_idx, v2_idx = triangles[i]
-        v0 = vertices[v0_idx]
-        v1 = vertices[v1_idx]
-        v2 = vertices[v2_idx]
+        v0_idx *= 3
+        v1_idx *= 3
+        v2_idx *= 3
+        v0 = ti.math.vec3(vertices[v0_idx], vertices[v0_idx + 1], vertices[v0_idx + 2])
+        v1 = ti.math.vec3(vertices[v1_idx], vertices[v1_idx + 1], vertices[v1_idx + 2])
+        v2 = ti.math.vec3(vertices[v2_idx], vertices[v2_idx + 1], vertices[v2_idx + 2])
         rest_triangle_areas[i] = ef.triangle_area(v0, v1, v2)
 
 
 @ti.kernel
-def init_rest_dihedral_angles(adj_triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+def init_rest_dihedral_angles(adj_triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.float32, ndim=1),
                               rest_dihedral_angles:ti.template()):
     """
     Returns list of dihedral angles of the undeformed adjacent triangles
@@ -158,16 +165,20 @@ def init_rest_dihedral_angles(adj_triangles: ti.template(), vertices:ti.types.nd
     """
     for i in range(adj_triangles.shape[0]):
         v0_idx, v1_idx, v2_idx, v3_idx = adj_triangles[i]
-        v0 = vertices[v0_idx]
-        v1 = vertices[v1_idx]
-        v2 = vertices[v2_idx]
-        v3 = vertices[v3_idx]
+        v0_idx *= 3
+        v1_idx *= 3
+        v2_idx *= 3
+        v3_idx *= 3
+        v0 = ti.math.vec3(vertices[v0_idx], vertices[v0_idx + 1], vertices[v0_idx + 2])
+        v1 = ti.math.vec3(vertices[v1_idx], vertices[v1_idx + 1], vertices[v1_idx + 2])
+        v2 = ti.math.vec3(vertices[v2_idx], vertices[v2_idx + 1], vertices[v2_idx + 2])
+        v3 = ti.math.vec3(vertices[v3_idx], vertices[v3_idx + 1], vertices[v3_idx + 2])
         normal0 = ef.triangle_normal(v0, v1, v2)
         normal1 = ef.triangle_normal(v0, v3, v1)
         rest_dihedral_angles[i] = ef.dihedral_angle(normal0,normal1)
 
 @ti.kernel
-def init_rest_heights(adj_triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.math.vec3, ndim=1),
+def init_rest_heights(adj_triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.float32, ndim=1),
                       rest_heights:ti.template()):
     """
     Returns list of heights of the undeformed adjacent triangles
@@ -175,11 +186,41 @@ def init_rest_heights(adj_triangles: ti.template(), vertices:ti.types.ndarray(dt
     """
     for i in range(adj_triangles.shape[0]):
         v0_idx, v1_idx, v2_idx, v3_idx = adj_triangles[i]
-        v0 = vertices[v0_idx]
-        v1 = vertices[v1_idx]
-        v2 = vertices[v2_idx]
-        v3 = vertices[v3_idx]
+        v0_idx *= 3
+        v1_idx *= 3
+        v2_idx *= 3
+        v3_idx *= 3
+        v0 = ti.math.vec3(vertices[v0_idx], vertices[v0_idx + 1], vertices[v0_idx + 2])
+        v1 = ti.math.vec3(vertices[v1_idx], vertices[v1_idx + 1], vertices[v1_idx + 2])
+        v2 = ti.math.vec3(vertices[v2_idx], vertices[v2_idx + 1], vertices[v2_idx + 2])
+        v3 = ti.math.vec3(vertices[v3_idx], vertices[v3_idx + 1], vertices[v3_idx + 2])
         t0_area = ef.triangle_area(v0, v1, v2)
         t1_area = ef.triangle_area(v0, v3, v1)
         e_length = ef.edge_length(v0, v1)
         rest_heights[i] = ef.height(t0_area, t1_area, e_length)
+
+@ti.kernel
+def init_rest_adj_tri_metadata(
+        adj_triangles: ti.template(),
+        vertices: ti.types.ndarray(dtype=ti.f32),
+        meta_data: ti.template()):
+    """
+    Populates meta_data with the hinge edge length, the dihedral angle and the 1/3 of the average height.
+    """
+    for i in range(adj_triangles.shape[0]):
+        v0_idx, v1_idx, v2_idx, v3_idx = adj_triangles[i]
+        v0 = get_vertex_coords(v0_idx, vertices)
+        v1 = get_vertex_coords(v1_idx, vertices)
+        v2 = get_vertex_coords(v2_idx, vertices)
+        v3 = get_vertex_coords(v3_idx, vertices)
+
+        normal0 = ef.triangle_normal(v0, v1, v2)
+        normal1 = ef.triangle_normal(v0, v3, v1)
+        t0_area = ef.triangle_area(v0, v1, v2)
+        t1_area = ef.triangle_area(v0, v3, v1)
+        e_length = ef.edge_length(v0, v1)
+
+        meta_data[i][0] = e_length
+        meta_data[i][1] = ef.dihedral_angle(normal0, normal1)
+        meta_data[i][2] = ef.height(t0_area, t1_area, e_length)
+
