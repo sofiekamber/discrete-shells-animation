@@ -1,7 +1,7 @@
 #Simulation params
 dt: 0.01
 device: cpu #gpu
-mesh_path: "assets/triangles/2triangles.obj" #"assets/cube/cube.obj" #"assets/can/14025_Soda_Can_v3_l3.obj"
+mesh_path: "assets/triangles/3triangles.obj" #"assets/cube/cube.obj" #"assets/can/14025_Soda_Can_v3_l3.obj"
 area_mass_density: 1.0
 
 #Energy params
