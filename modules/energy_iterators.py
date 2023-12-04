@@ -20,8 +20,8 @@ def populate_edge_jacobian(
     """
     for i in range(n_edges):
         v0_idx, v1_idx = e_ids[i]
-        x1, y1, z1 = vertices[v0_idx]
-        x2, y2, z2 = vertices[v1_idx]
+        x1, y1, z1 = get_vertex_coords(v1, vertices)
+        x2, y2, z2 = get_vertex_coords(v2, vertices)
         e_bar = e_bars[i]
 
         dx1, dy1, dz1, dx2, dy2, dz2 = edge_J(x1, y1, z1, x2, y2, z2, e_bar)
@@ -46,8 +46,8 @@ def populate_edge_hessian(
     for i in range(n_edges):
         v1, v2 = e_ids[i]
         e_bar = e_bars[i]
-        x1, y1, z1 = vertices[v1]
-        x2, y2, z2 = vertices[v2]
+        x1, y1, z1 = get_vertex_coords(v1, vertices)
+        x2, y2, z2 = get_vertex_coords(v2, vertices)
 
         h_entries = edge_H(x1,y1,z1, x2,y2,z2, e_bar)
         h_indexes = global_idx_2(v1, v2)
