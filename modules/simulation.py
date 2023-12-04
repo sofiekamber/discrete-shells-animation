@@ -85,15 +85,27 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
                 e_ids: ti.template(), rest_edge_lengths: ti.template(), n_edges: ti.i32, t_ids: ti.template(),
                 A_bars: ti.template(), n_tris: ti.i32, n_vertices: ti.i32, M_inverse: ti.template(),
                 Identity: ti.template(), acc_i: ti.template()):
+    """
+    Takes one newton step for finding x_i+1
+    """
+    x_old = x_new
+
     H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices)
     # populate_edge_hessian(H_builder, e_ids, x, rest_edge_lengths, n_edges)
     populate_area_hessian(H_builder, t_ids, x_old, A_bars, n_tris)
     H = H_builder.build()
 
-    A = delta_t * delta_t * beta * M_inverse * H - Identity
+
+    J_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
+    J_arr = ti.ndarray(ti.f32, n_vertices)
+    populate_area_jacobian(J_arr, t_ids, x_old, A_bars, n_tris)
+    fill_col_vector(J_builder, J_arr, n_vertices)
+    J = J_builder.build()
+
+    A = delta_t * delta_t * beta * M_inverse @ H + Identity
 
     t1 = x_i
-    add_scalar_to_ndarray(t1, delta_t + delta_t * delta_t * (beta - 0.5))
+    add_scalar_to_ndarray(t1, delta_t )
     t1_vec_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     fill_col_vector(t1_vec_builder, t1, n_vertices)
     t1_vec = t1_vec_builder.build()
@@ -106,7 +118,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     fill_col_vector(x_vec_builder, x_old, n_vertices)
     x_vec = x_vec_builder.build()
 
-    b = (t1_vec * acc_i_vec) - (A @ x_vec)
+    b = (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ (J + delta_t * (H @ x_vec))
 
     b_arr = ti.ndarray(float, n_vertices)
     fill_arr_from_col_vec(b_arr, b, n_vertices)
@@ -115,7 +127,6 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     solver.analyze_pattern(A)
     solver.factorize(A)
 
-    x_old = x_new
     x_new = solver.solve(b_arr)
 
     return x_old, x_new
