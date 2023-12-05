@@ -90,7 +90,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     """
     x_old = x_new
 
-    H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices)
+    H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices, 3* n_vertices * n_vertices)
     populate_area_hessian(H_builder, t_ids, x_old, A_bars, n_tris)
     populate_edge_hessian(H_builder, e_ids, x_old, rest_edge_lengths, n_edges)
     H = H_builder.build()
@@ -118,7 +118,8 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     fill_col_vector(x_vec_builder, x_old, n_vertices)
     x_vec = x_vec_builder.build()
 
-    b = (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ (J + delta_t * (H @ x_vec))
+    b =  (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ (J - delta_t * (H @ x_vec))
+    g = (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ J - x_vec
 
     b_arr = ti.ndarray(float, n_vertices)
     fill_arr_from_col_vec(b_arr, b, n_vertices)
@@ -127,7 +128,12 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     solver.analyze_pattern(A)
     solver.factorize(A)
 
-    x_new = solver.solve(b_arr)
+    x_new =solver.solve(b_arr)
+    
+    #print("--------------------------------------------")
+    #print(g)
+    #print((A @ x_new).to_numpy())
+    #print(b_arr.to_numpy())
 
     return x_old, x_new
 
@@ -180,4 +186,5 @@ def newmark_integration(x_i: ti.types.ndarray(),
         x_old, x_new = newton_step(x_old, x_new, x_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars,
                                    n_tris, n_vertices, M_inverse, Identity, acc_i)
 
+    print(x_new.to_numpy())
     return x_new

@@ -1,7 +1,7 @@
 #Simulation params
 dt: 0.01
 device: cpu #gpu
-mesh_path: "assets/triangles/3triangles.obj" #"assets/cube/cube.obj" #"assets/can/14025_Soda_Can_v3_l3.obj"
+mesh_path: "assets/triangles/2triangles.obj" #"assets/cube/cube.obj" #"assets/can/14025_Soda_Can_v3_l3.obj"
 area_mass_density: 1.0
 
 #Energy params
@@ -10,5 +10,5 @@ k_area: 0.5
 k_bend: 0.5
 
 #Newmark Time Stepping
-beta: 0 #use 0 (explicit) for debugging and 0.25 (beta > 0; implicit) for production
+beta: 0.25 #use 0 (explicit) for debugging and 0.25 (beta > 0; implicit) for production
 gamma: 0.5 #numerical damping
