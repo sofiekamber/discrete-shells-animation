@@ -91,14 +91,14 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     x_old = x_new
 
     H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices)
-    # populate_edge_hessian(H_builder, e_ids, x, rest_edge_lengths, n_edges)
     populate_area_hessian(H_builder, t_ids, x_old, A_bars, n_tris)
+    populate_edge_hessian(H_builder, e_ids, x_old, rest_edge_lengths, n_edges)
     H = H_builder.build()
-
 
     J_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     J_arr = ti.ndarray(ti.f32, n_vertices)
     populate_area_jacobian(J_arr, t_ids, x_old, A_bars, n_tris)
+    populate_edge_jacobian(J_arr, e_ids, x_old, rest_edge_lengths, n_edges)
     fill_col_vector(J_builder, J_arr, n_vertices)
     J = J_builder.build()
 
@@ -156,8 +156,8 @@ def newmark_integration(x_i: ti.types.ndarray(),
 
     # create Jacobian
     J = ti.ndarray(float, n_vertices)
-    # populate_edge_jacobian(J, e_ids, x_rolled, rest_edge_lengths, n_edges)
     populate_area_jacobian(J, t_ids, x_i, A_bars, n_tris)
+    populate_edge_jacobian(J, e_ids, x_i, rest_edge_lengths, n_edges)
 
     acc_i = M_inverse @ J
 
