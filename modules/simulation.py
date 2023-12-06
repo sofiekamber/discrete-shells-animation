@@ -36,6 +36,18 @@ def add_scalar_to_ndarray(arr: ti.types.ndarray(), scalar: ti.f32):
     for i in ti.grouped(arr):
         arr[i] = arr[i] + scalar
 
+@ti.kernel
+def add_velocity_dt_to_x(x: ti.types.ndarray(), v: ti.types.ndarray(), dt: ti.f32):
+    for i in range(x.shape[0]):
+        x[i] = x[i] + v[i] * dt
+
+@ti.kernel
+def update_velocity_vector(v_i: ti.types.ndarray(), a_i: ti.types.ndarray(),a_i1: ti.types.ndarray(),
+                             dt_i: ti.f64, gamma:ti.f64):
+    """x'_(i+1) = x'_i + dt_i * ((1-gamma) x''_i + gamma * x''_(i+1))"""
+    for i in range(v_i.shape[0]):
+        v_i[i] = v_i[i] + dt_i * ((1 - gamma) * a_i[i] + gamma * a_i1[i])
+
 
 # def unroll(arr : ti.types.ndarray(), arr_unrolled: ti.types.ndarray()):
 #     for i in range(arr.shape[0]):
@@ -81,7 +93,8 @@ def get_euclidian_distance(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(),
     return math.sqrt(distance)
 
 
-def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.types.ndarray(), delta_t: ti.f64, beta: ti.f64,
+def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.types.ndarray(), v_i: ti.types.ndarray(),
+                delta_t: ti.f64, beta: ti.f64,
                 e_ids: ti.template(), rest_edge_lengths: ti.template(), n_edges: ti.i32, t_ids: ti.template(),
                 A_bars: ti.template(), n_tris: ti.i32, n_vertices: ti.i32, M_inverse: ti.template(),
                 Identity: ti.template(), acc_i: ti.template()):
@@ -105,7 +118,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     A = delta_t * delta_t * beta * M_inverse @ H + Identity
 
     t1 = x_i
-    add_scalar_to_ndarray(t1, delta_t )
+    add_velocity_dt_to_x(t1,v_i,delta_t)
     t1_vec_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     fill_col_vector(t1_vec_builder, t1, n_vertices)
     t1_vec = t1_vec_builder.build()
@@ -118,7 +131,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     fill_col_vector(x_vec_builder, x_old, n_vertices)
     x_vec = x_vec_builder.build()
 
-    b =  (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ (J - delta_t * (H @ x_vec))
+    b = (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ (J - delta_t * (H @ x_vec))
     g = (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ J - x_vec
 
     b_arr = ti.ndarray(float, n_vertices)
@@ -139,8 +152,10 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
 
 
 def newmark_integration(x_i: ti.types.ndarray(),
+                        v_i: ti.types.ndarray(),
                         delta_t: ti.f64,
                         beta: ti.f64,
+                        gamma: ti.f64,
                         e_ids: ti.template(),
                         rest_edge_lengths: ti.template(),
                         n_edges: ti.i32,
@@ -148,7 +163,7 @@ def newmark_integration(x_i: ti.types.ndarray(),
                         A_bars: ti.template(),
                         n_tris: ti.i32):
     """Newmark Integration:
-        x_(i+1) = x_i + dt_i + dt_i^2 * ((0.5 - beta) x''_i + beta * x_''(i+1),
+        x_(i+1) = x_i + dt_i * x'_i + dt_i^2 * ((0.5 - beta) x''_i + beta * x_''(i+1),
         x'_(i+1) = x'_i + dt_i * ((1-gamma) x''_i + gamma * x''_(i+1))"""
 
     n_vertices = x_i.shape[0]
@@ -179,12 +194,21 @@ def newmark_integration(x_i: ti.types.ndarray(),
     # add_scalar_to_ndarray(x_old, 1.0)
     x_old = x_i
     x_new = x_i
-    x_old, x_new = newton_step(x_old, x_new, x_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
+    x_old, x_new = newton_step(x_old, x_new, x_i, v_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
                                n_vertices, M_inverse, Identity, acc_i)
 
     while get_euclidian_distance(x_old, x_new, n_vertices) > epsilon:
         x_old, x_new = newton_step(x_old, x_new, x_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars,
                                    n_tris, n_vertices, M_inverse, Identity, acc_i)
 
-    print(x_new.to_numpy())
+    # print(x_new.to_numpy())
+
+    # Update velocity
+    J_new = ti.ndarray(float, n_vertices)
+    populate_area_jacobian(J_new, t_ids, x_new, A_bars, n_tris)
+    populate_edge_jacobian(J_new, e_ids, x_new, rest_edge_lengths, n_edges)
+
+    acc_new = M_inverse @ J_new
+    update_velocity_vector(v_i,acc_i,acc_new,delta_t,gamma)
+
     return x_new
