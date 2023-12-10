@@ -176,6 +176,7 @@ def init_rest_dihedral_angles(adj_triangles: ti.template(), vertices:ti.types.nd
         normal0 = ef.triangle_normal(v0, v1, v2)
         normal1 = ef.triangle_normal(v0, v3, v1)
         rest_dihedral_angles[i] = ef.dihedral_angle(normal0,normal1)
+        # rest_dihedral_angles[i] = 0.0
 
 @ti.kernel
 def init_rest_heights(adj_triangles: ti.template(), vertices:ti.types.ndarray(dtype=ti.float32, ndim=1),

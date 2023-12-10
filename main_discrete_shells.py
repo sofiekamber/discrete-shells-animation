@@ -42,6 +42,8 @@ init.init_rest_dihedral_angles(adj_t_ids, x, rest_dihedral_angles)
 rest_heights = ti.Vector.field(1, dtype=ti.float32, shape=n_adj_triangles)
 init.init_rest_heights(adj_t_ids, x, rest_heights)
 
+rest_adj_tri_metadata = ti.Vector.field(n=3, dtype=ti.float32, shape=n_adj_triangles)
+init.init_rest_adj_tri_metadata(adj_t_ids, x, rest_adj_tri_metadata)
 
 
 """Run gui"""
@@ -66,7 +68,8 @@ while window.running:
     for i in range(substeps):
         sim.newmark_integration(x_i=x, v_i =v,delta_t=dt, beta=params["beta"], gamma=params["gamma"],
                                 e_ids=e_ids, rest_edge_lengths=rest_edge_lengths, n_edges=n_edges, t_ids=t_ids,
-                                A_bars=rest_triangle_areas, n_tris=n_triangles)
+                                A_bars=rest_triangle_areas, n_tris=n_triangles, adj_t_ids=adj_t_ids,
+                                rest_adj_tri_metadata=rest_adj_tri_metadata, n_adj_triangles=n_adj_triangles)
         sim.update_vertices(x,vertices_gui)
         current_t += dt
 

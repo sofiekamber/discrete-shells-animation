@@ -3,7 +3,7 @@ import math
 import taichi as ti
 
 from modules.energy_iterators import populate_edge_hessian, populate_edge_jacobian, populate_area_jacobian, \
-    populate_area_hessian
+    populate_area_hessian, populate_flex_jacobian, populate_flex_hessian
 from modules.helpers import global_idx
 
 
@@ -97,7 +97,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
                 delta_t: ti.f64, beta: ti.f64,
                 e_ids: ti.template(), rest_edge_lengths: ti.template(), n_edges: ti.i32, t_ids: ti.template(),
                 A_bars: ti.template(), n_tris: ti.i32, n_vertices: ti.i32, M_inverse: ti.template(),
-                Identity: ti.template(), acc_i: ti.template()):
+                Identity: ti.template(), acc_i: ti.template(), adj_t_ids: ti.template(), rest_adj_tri_metadata: ti.template(), n_adj_triangles: ti.i32):
     """
     Takes one newton step for finding x_i+1
     """
@@ -106,12 +106,14 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices, 3* n_vertices * n_vertices)
     populate_area_hessian(H_builder, t_ids, x_old, A_bars, n_tris)
     populate_edge_hessian(H_builder, e_ids, x_old, rest_edge_lengths, n_edges)
+    populate_flex_hessian(H_builder, adj_t_ids, x_old, rest_adj_tri_metadata, n_adj_triangles)
     H = H_builder.build()
 
     J_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     J_arr = ti.ndarray(ti.f32, n_vertices)
     populate_area_jacobian(J_arr, t_ids, x_old, A_bars, n_tris)
     populate_edge_jacobian(J_arr, e_ids, x_old, rest_edge_lengths, n_edges)
+    populate_flex_jacobian(J_arr, adj_t_ids, x_old, rest_adj_tri_metadata, n_adj_triangles)
     fill_col_vector(J_builder, J_arr, n_vertices)
     J = J_builder.build()
 
@@ -161,7 +163,10 @@ def newmark_integration(x_i: ti.types.ndarray(),
                         n_edges: ti.i32,
                         t_ids: ti.template(),
                         A_bars: ti.template(),
-                        n_tris: ti.i32):
+                        n_tris: ti.i32,
+                        adj_t_ids: ti.template(),
+                        rest_adj_tri_metadata: ti.template(),
+                        n_adj_triangles: ti.i32):
     """Newmark Integration:
         x_(i+1) = x_i + dt_i * x'_i + dt_i^2 * ((0.5 - beta) x''_i + beta * x_''(i+1),
         x'_(i+1) = x'_i + dt_i * ((1-gamma) x''_i + gamma * x''_(i+1))"""
@@ -179,6 +184,7 @@ def newmark_integration(x_i: ti.types.ndarray(),
     J = ti.ndarray(float, n_vertices)
     populate_area_jacobian(J, t_ids, x_i, A_bars, n_tris)
     populate_edge_jacobian(J, e_ids, x_i, rest_edge_lengths, n_edges)
+    populate_flex_jacobian(J, adj_t_ids, x_i, rest_adj_tri_metadata, n_adj_triangles)
 
     acc_i = M_inverse @ J
 
@@ -194,12 +200,13 @@ def newmark_integration(x_i: ti.types.ndarray(),
     # add_scalar_to_ndarray(x_old, 1.0)
     x_old = x_i
     x_new = x_i
+    # add_scalar_to_ndarray(x_new, 0.5)
     x_old, x_new = newton_step(x_old, x_new, x_i, v_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
-                               n_vertices, M_inverse, Identity, acc_i)
+                               n_vertices, M_inverse, Identity, acc_i, adj_t_ids, rest_adj_tri_metadata, n_adj_triangles)
 
     while get_euclidian_distance(x_old, x_new, n_vertices) > epsilon:
-        x_old, x_new = newton_step(x_old, x_new, x_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars,
-                                   n_tris, n_vertices, M_inverse, Identity, acc_i)
+        x_old, x_new = newton_step(x_old, x_new, x_i, v_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
+                               n_vertices, M_inverse, Identity, acc_i, adj_t_ids, rest_adj_tri_metadata, n_adj_triangles)
 
     # print(x_new.to_numpy())
 
@@ -207,6 +214,7 @@ def newmark_integration(x_i: ti.types.ndarray(),
     J_new = ti.ndarray(float, n_vertices)
     populate_area_jacobian(J_new, t_ids, x_new, A_bars, n_tris)
     populate_edge_jacobian(J_new, e_ids, x_new, rest_edge_lengths, n_edges)
+    populate_flex_jacobian(J_new, adj_t_ids, x_new, rest_adj_tri_metadata, n_adj_triangles)
 
     acc_new = M_inverse @ J_new
     update_velocity_vector(v_i,acc_i,acc_new,delta_t,gamma)
