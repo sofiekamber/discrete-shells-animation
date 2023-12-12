@@ -108,6 +108,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     populate_edge_hessian(H_builder, e_ids, x_old, rest_edge_lengths, n_edges)
     populate_flex_hessian(H_builder, adj_t_ids, x_old, rest_adj_tri_metadata, n_adj_triangles)
     H = H_builder.build()
+    #print("H: ", H)
 
     J_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     J_arr = ti.ndarray(ti.f32, n_vertices)
@@ -116,6 +117,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     populate_flex_jacobian(J_arr, adj_t_ids, x_old, rest_adj_tri_metadata, n_adj_triangles)
     fill_col_vector(J_builder, J_arr, n_vertices)
     J = J_builder.build()
+    #print("J: ", J)
 
     A = delta_t * delta_t * beta * M_inverse @ H + Identity
 
@@ -124,6 +126,10 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     t1_vec_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     fill_col_vector(t1_vec_builder, t1, n_vertices)
     t1_vec = t1_vec_builder.build()
+
+    #print("v_i: ", v_i.to_numpy())
+    #print("v1_vec: ", t1_vec)
+    #print("adj_tri: ", rest_adj_tri_metadata.to_numpy())
 
     acc_i_vec_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
     fill_col_vector(acc_i_vec_builder, acc_i, n_vertices)
@@ -143,7 +149,9 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     solver.analyze_pattern(A)
     solver.factorize(A)
 
+    #print("x_old: ", x_old.to_numpy())
     x_new =solver.solve(b_arr)
+    #print("x_new: ", x_new.to_numpy())
     
     #print("--------------------------------------------")
     #print(g)
@@ -186,14 +194,14 @@ def newmark_integration(x_i: ti.types.ndarray(),
     populate_edge_jacobian(J, e_ids, x_i, rest_edge_lengths, n_edges)
     populate_flex_jacobian(J, adj_t_ids, x_i, rest_adj_tri_metadata, n_adj_triangles)
 
-    acc_i = M_inverse @ J
+    acc_i = -1.0 * M_inverse @ J
 
     Identity_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices)
 
     fillIdentity(Identity_builder, n_vertices)
     Identity = Identity_builder.build()
 
-    epsilon = 1e-6
+    epsilon = 1e-3
 
     # first step
     # x_old = ti.ndarray(float, n_vertices)  # initial guess
@@ -216,7 +224,7 @@ def newmark_integration(x_i: ti.types.ndarray(),
     populate_edge_jacobian(J_new, e_ids, x_new, rest_edge_lengths, n_edges)
     populate_flex_jacobian(J_new, adj_t_ids, x_new, rest_adj_tri_metadata, n_adj_triangles)
 
-    acc_new = M_inverse @ J_new
+    acc_new = -1.0 * M_inverse @ J_new
     update_velocity_vector(v_i,acc_i,acc_new,delta_t,gamma)
 
     return x_new
