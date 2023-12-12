@@ -156,8 +156,7 @@ def populate_flex_jacobian(
         for j in ti.static(range(12)):
             d = j_indexes[j]
             entry = j_entries[j]
-            if not ti.math.isnan(entry):
-                J[d] += entry
+            J[d] += entry
 
             
 @ti.kernel
@@ -195,5 +194,4 @@ def populate_flex_hessian(
             for k in ti.static(range(12)):
                 second_d = h_indexes[k]
                 entry = h_entries[j*12 + k]
-                if not ti.math.isnan(entry):
-                    H[first_d, second_d] += entry
+                H[first_d, second_d] += entry

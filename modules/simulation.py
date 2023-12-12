@@ -92,32 +92,47 @@ def get_euclidian_distance(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(),
         distance += (x_old[i] - x_new[i]) ** 2
     return math.sqrt(distance)
 
+@ti.kernel
+def squared_norm(x: ti.types.ndarray(float), n: ti.i32) -> ti.f32:
+    sum = 0.0
+    for i in range(n):
+        sum += x[i] ** 2
+    return sum
+
+#ti.kernel
+def average(x: ti.types.ndarray(float), y: ti.types.ndarray(float), n: ti.i32) -> ti.types.ndarray(float):
+    output = ti.ndarray(float, n)
+    for i in range(n):
+        output[i] = 0.5*x[i] + 0.5*y[i]
+    return output
+
 
 def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.types.ndarray(), v_i: ti.types.ndarray(),
                 delta_t: ti.f64, beta: ti.f64,
                 e_ids: ti.template(), rest_edge_lengths: ti.template(), n_edges: ti.i32, t_ids: ti.template(),
                 A_bars: ti.template(), n_tris: ti.i32, n_vertices: ti.i32, M_inverse: ti.template(),
-                Identity: ti.template(), acc_i: ti.template(), adj_t_ids: ti.template(), rest_adj_tri_metadata: ti.template(), n_adj_triangles: ti.i32):
+                Identity: ti.template(), acc_i: ti.template(), adj_t_ids: ti.template(), rest_adj_tri_metadata: ti.template(), n_adj_triangles: ti.i32, g_old: ti.f32):
     """
     Takes one newton step for finding x_i+1
     """
+    x_mid = average(x_old, x_new, n_vertices)
     x_old = x_new
 
-    H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices, 3* n_vertices * n_vertices)
+    H_builder = ti.linalg.SparseMatrixBuilder(n_vertices, n_vertices, 81*n_tris + 36*n_edges + 144*n_adj_triangles)
     populate_area_hessian(H_builder, t_ids, x_old, A_bars, n_tris)
     populate_edge_hessian(H_builder, e_ids, x_old, rest_edge_lengths, n_edges)
     populate_flex_hessian(H_builder, adj_t_ids, x_old, rest_adj_tri_metadata, n_adj_triangles)
     H = H_builder.build()
     #print("H: ", H)
 
-    J_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1)
+    J_builder = ti.linalg.SparseMatrixBuilder(n_vertices, 1, 9*n_tris + 6*n_edges + 12*n_adj_triangles)
     J_arr = ti.ndarray(ti.f32, n_vertices)
     populate_area_jacobian(J_arr, t_ids, x_old, A_bars, n_tris)
     populate_edge_jacobian(J_arr, e_ids, x_old, rest_edge_lengths, n_edges)
     populate_flex_jacobian(J_arr, adj_t_ids, x_old, rest_adj_tri_metadata, n_adj_triangles)
     fill_col_vector(J_builder, J_arr, n_vertices)
     J = J_builder.build()
-    #print("J: ", J)
+    print("J: ", J)
 
     A = delta_t * delta_t * beta * M_inverse @ H + Identity
 
@@ -127,6 +142,7 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     fill_col_vector(t1_vec_builder, t1, n_vertices)
     t1_vec = t1_vec_builder.build()
 
+    #print("x_i: ", x_i.to_numpy())
     #print("v_i: ", v_i.to_numpy())
     #print("v1_vec: ", t1_vec)
     #print("adj_tri: ", rest_adj_tri_metadata.to_numpy())
@@ -139,8 +155,18 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     fill_col_vector(x_vec_builder, x_old, n_vertices)
     x_vec = x_vec_builder.build()
 
+    #print("--------------------------------------------")
+    g_arr = ti.ndarray(float, n_vertices)
+    g_mat =(t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ J - x_vec
+    #print("g_mat: ", g_mat)
+    fill_arr_from_col_vec(g_arr, g_mat, n_vertices)
+    #print("g_arr: ", g_arr)
+    g = squared_norm(g_arr, n_vertices)
+    print(g)
+    if g > g_old:
+        return x_old, x_mid, g
+
     b = (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ (J - delta_t * (H @ x_vec))
-    g = (t1_vec + (delta_t * delta_t * (beta - 0.5))* acc_i_vec) - delta_t*beta*M_inverse @ J - x_vec
 
     b_arr = ti.ndarray(float, n_vertices)
     fill_arr_from_col_vec(b_arr, b, n_vertices)
@@ -149,16 +175,12 @@ def newton_step(x_old: ti.types.ndarray(), x_new: ti.types.ndarray(), x_i: ti.ty
     solver.analyze_pattern(A)
     solver.factorize(A)
 
-    #print("x_old: ", x_old.to_numpy())
     x_new =solver.solve(b_arr)
-    #print("x_new: ", x_new.to_numpy())
     
-    #print("--------------------------------------------")
-    #print(g)
     #print((A @ x_new).to_numpy())
     #print(b_arr.to_numpy())
 
-    return x_old, x_new
+    return x_old, x_new, g
 
 
 def newmark_integration(x_i: ti.types.ndarray(),
@@ -187,7 +209,7 @@ def newmark_integration(x_i: ti.types.ndarray(),
     M_inverse_builder = ti.linalg.SparseMatrixBuilder(num_rows=n_vertices, num_cols=n_vertices, max_num_triplets=100)
     fillInveredMass(M_inverse_builder, n_vertices)
     M_inverse = M_inverse_builder.build()
-
+    
     # create Jacobian
     J = ti.ndarray(float, n_vertices)
     populate_area_jacobian(J, t_ids, x_i, A_bars, n_tris)
@@ -201,7 +223,7 @@ def newmark_integration(x_i: ti.types.ndarray(),
     fillIdentity(Identity_builder, n_vertices)
     Identity = Identity_builder.build()
 
-    epsilon = 1e-3
+    epsilon = 1e-6
 
     # first step
     # x_old = ti.ndarray(float, n_vertices)  # initial guess
@@ -209,12 +231,13 @@ def newmark_integration(x_i: ti.types.ndarray(),
     x_old = x_i
     x_new = x_i
     # add_scalar_to_ndarray(x_new, 0.5)
-    x_old, x_new = newton_step(x_old, x_new, x_i, v_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
-                               n_vertices, M_inverse, Identity, acc_i, adj_t_ids, rest_adj_tri_metadata, n_adj_triangles)
+    x_old, x_new, g_new = newton_step(x_old, x_new, x_i, v_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
+                               n_vertices, M_inverse, Identity, acc_i, adj_t_ids, rest_adj_tri_metadata, n_adj_triangles, 1000)
 
-    while get_euclidian_distance(x_old, x_new, n_vertices) > epsilon:
-        x_old, x_new = newton_step(x_old, x_new, x_i, v_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
-                               n_vertices, M_inverse, Identity, acc_i, adj_t_ids, rest_adj_tri_metadata, n_adj_triangles)
+    while g_new > epsilon:
+        x_old, x_new, g_new = newton_step(x_old, x_new, x_i, v_i, delta_t, beta, e_ids, rest_edge_lengths, n_edges, t_ids, A_bars, n_tris,
+                               n_vertices, M_inverse, Identity, acc_i, adj_t_ids, rest_adj_tri_metadata, n_adj_triangles, g_new)
+        
 
     # print(x_new.to_numpy())
 
