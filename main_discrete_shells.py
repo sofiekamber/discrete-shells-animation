@@ -60,19 +60,22 @@ substeps = int(1 / 60 // dt)
 
 M_inverse = ti.linalg.SparseMatrixBuilder(num_rows=n_vertices, num_cols=n_vertices, max_num_triplets=100)
 
-x[0] = 2.0
 print(x.to_numpy())
+sim.add_random_noise(x, 0.01, n_vertices)
+print(x.to_numpy())
+
 while window.running:
-    if current_t > 1.5:
+    if current_t > 10:
         # Reset
         current_t = 0
 
+    sim.enforce_sphere_constraint(x, 1.8-0.15 * current_t, n_vertices)
     for i in range(substeps):
         sim.newmark_integration(x_i=x, v_i =v,delta_t=dt, beta=params["beta"], gamma=params["gamma"],
                                 e_ids=e_ids, rest_edge_lengths=rest_edge_lengths, n_edges=n_edges, t_ids=t_ids,
                                 A_bars=rest_triangle_areas, n_tris=n_triangles, adj_t_ids=adj_t_ids,
                                 rest_adj_tri_metadata=rest_adj_tri_metadata, n_adj_triangles=n_adj_triangles)
-        print("-----------")
+        #print("-----------")
         sim.update_vertices(x,vertices_gui)
         current_t += dt
 
