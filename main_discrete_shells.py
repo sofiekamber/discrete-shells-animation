@@ -12,8 +12,7 @@ elif device == 'gpu':
     ti.init(arch=ti.gpu)
 else:
     raise ValueError(f"{device} not supported")
-#Import energy functions
-import modules.energies as en
+
 
 #Import simulation functions (Newmark integration, differentiation)
 import modules.simulation as sim
@@ -60,9 +59,9 @@ substeps = int(1 / 60 // dt)
 
 M_inverse = ti.linalg.SparseMatrixBuilder(num_rows=n_vertices, num_cols=n_vertices, max_num_triplets=100)
 
-print(x.to_numpy())
+# print(x.to_numpy())
 sim.add_random_noise(x, 0.01, n_vertices)
-print(x.to_numpy())
+# print(x.to_numpy())
 
 while window.running:
     if current_t > 10:

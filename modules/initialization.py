@@ -30,7 +30,9 @@ def load_mesh(mesh_path):
        Output:
         * vertices_undef: mesh vertices; shape (n_vertices,) - inital vertices
         * vertices: mesh vertices; shape (n_vertices,)
-        * indices: mesh triangle indices;  shape (n_triangles * 3,); used in rendering
+        * vels: vertex velocities; shape (n_vertices,) - initial vertex velocities set to 0
+        * vertices_gui: mesh vertices; used in rendering
+        * gui_indices: mesh triangle indices;  shape (n_triangles * 3,); used in rendering
         * t_indices: mesh triangle indices;  shape (n_triangles,)
         * e_indices: mesh triangle indices;  shape (n_edges)
         * adj_t_indices: mesh triangle indices;  shape (n_adj_triangles,)"""

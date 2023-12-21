@@ -1,12 +1,15 @@
 import taichi as ti
 import taichi.math as math
 
+
 @ti.func
 def edge_length(v0, v1):
+    """Computes edge length between vertices v0 and v1"""
     return (v1 - v0).norm()
 
 @ti.func
 def triangle_area(v0, v1, v2):
+    """Computes the area of the triangle defined by its corner vertices v0, v1 and v2"""
     e0 = v1 - v0
     e1 = v2 - v0
     return 0.5 * (e0.cross(e1)).norm()
@@ -14,6 +17,7 @@ def triangle_area(v0, v1, v2):
 
 @ti.func
 def triangle_normal(v0, v1, v2):
+    """Computes the normal of the triangle defined by its corner vertices v0, v1 and v2"""
     e0 = v1 - v0
     e1 = v2 - v0
     return (e0.cross(e1)).normalized()
@@ -21,6 +25,7 @@ def triangle_normal(v0, v1, v2):
 
 @ti.func
 def dihedral_angle(normal0, normal1):
+    """Computes the dihedral angle of two adjacent triangles given their normals"""
     dotProduct = normal0.dot(normal1)
     #// Ensure the dot product is within valid range [-1, 1] to avoid NaN in arccos
     dotProduct = math.max(-1.0, math.min(1.0, dotProduct))
@@ -32,6 +37,7 @@ def dihedral_angle(normal0, normal1):
 
 @ti.func
 def height(t0_area, t1_area, e_length):
+    """Computes the shared height of two adjacent triangles given their triangle areas with respect to a common edge"""
     #1/6 * (height_t0 + height_t1) sharing e
     height_t0 = 2 * t0_area / e_length
     height_t1 = 2 * t1_area / e_length

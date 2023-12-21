@@ -1,16 +1,11 @@
 # Discrete Shells
 
-A brief description of your project.
+Crumpling paper simulation using Discrete Shells.
 
-## Table of Contents
-- [Project Overview](#project-overview)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Citation](#citation)
+In order to run our simulation, please run "main_discrete_shells.py".
 
-## Project Overview
+Parameters are defined in config.yaml.
 
-Provide a more detailed explanation of what your project does and why it's useful. Include any important details or features.
 
 ## Installation
 
@@ -25,4 +20,8 @@ pip install -r requirements.txt
 ```
 
 ## Citation
+Eitan Grinspun, Anil N. Hirani, Mathieu Desbrun, and Peter Schröder. 2003. Discrete shells. 
 
+In Proceedings of the 2003 ACM SIGGRAPH/Eurographics symposium on Computer animation (SCA '03). 
+
+Eurographics Association, Goslar, DEU, 62–67.
